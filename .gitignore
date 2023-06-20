@@ -1,1 +1,28 @@
+# Python virtual environment
 venv/
+
+# Byte-compiled/optimized/DLL files
+__pycache__/
+*.py[cod]
+
+# Unit test/coverage reports
+tests/unittests/reports
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+coverage.xml
+
+# Temporary developer scripts
+dev_scripts
+
+# Sphinx documentation
+docs/_build
+
+# Distribution/packaging
+build/
+dist/
+*.egg-info/
+
+.env
+etc/helm/values.yaml

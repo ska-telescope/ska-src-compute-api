@@ -7,8 +7,6 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      API_PREFIX: http
-      API_HOST: localhost
-      API_PORT: 4747
+      TEST_ENV: Test
     ports:
       - 4747:4747
