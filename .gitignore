@@ -25,4 +25,4 @@ dist/
 *.egg-info/
 
 .env
-etc/helm/values.yaml
+server/etc/helm/values.yaml
