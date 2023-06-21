@@ -1,0 +1,12 @@
+{
+    "/test_auth": {
+        "GET": "admin"
+    },
+    "/login": {
+        "GET": "admin"
+    },
+    "/auth": {
+        "GET": "admin"
+    }
+}
+  
