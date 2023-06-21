@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import os
+
 app = FastAPI()
 
 origins = ["*"]     # non-public endpoints are only accessible via tokens.
@@ -19,6 +21,11 @@ def get_auth_token(token_info):
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+
+@app.get("/test")
+def read_root():
+    return {"Env var": os.getenv('TEST_ENV', "Var not set!")}
 
 
 @app.post("/login")

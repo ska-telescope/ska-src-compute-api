@@ -1,0 +1,12 @@
+version: "3.5"
+services:
+  core:
+    container_name: ska-src-rest-skeleton
+    image: ska-src-rest-skeleton:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      TEST_ENV: Test
+    ports:
+      - 4747:4747
