@@ -6,7 +6,5 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      TEST_ENV: Test
     ports:
       - 4747:4747

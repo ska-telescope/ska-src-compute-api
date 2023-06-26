@@ -14,6 +14,16 @@ RUN cd /opt/server && python3 -m pip install -e .
 
 WORKDIR /opt/server
 
-ENV TEST_ENV ''
+ENV CLIENT_CONF_URL ''
+ENV CLIENT_NAME 'SKA'
+ENV CLIENT_SCOPES 'openid email profile'
+ENV PERMISSIONS_ROOT_GROUP ''
+ENV PERMISSIONS_RELPATH '../../../etc/permissions'
+ENV PERMISSIONS_NAME 'default.json'
+ENV ROLES_RELPATH '../../../etc/roles'
+ENV ROLES_NAME 'default.json'
+ENV SESSION_MIDDLEWARE_SECRET_KEY ''
+ENV SKA_CLIENT_ID ''
+ENV SKA_CLIENT_SECRET ''
 
 ENTRYPOINT ["/bin/bash", "etc/docker/init.sh"]

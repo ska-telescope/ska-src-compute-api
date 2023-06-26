@@ -1,0 +1,20 @@
+image: docker:git
+services:
+- docker:dind
+
+stages:
+- build
+
+variables:
+  API_IMAGE_NAME: $CI_REGISTRY_IMAGE
+
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+build_api:
+  only:
+    - main
+  stage: build
+  script:
+    - docker build . -f Dockerfile --tag $API_IMAGE_NAME:latest 
+    - docker push $API_IMAGE_NAME:latest
