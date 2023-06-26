@@ -94,42 +94,51 @@ async def verify_permission_for_route(request: Request) -> Union[HTTPException, 
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, repr(e))
 
 
-@app.get('/login')
-async def login(request: Request):
-    redirect_uri = request.url_for('auth')
-    print(OAUTH_CLIENT)
-    return await OAUTH_CLIENT.authorize_redirect(request, redirect_uri)
-
-
-@app.get('/auth')
-async def auth(request: Request) -> RedirectResponse:
-    try:
-        token = await OAUTH_CLIENT.authorize_access_token(request)
-    except OAuthError as error:
-        return HTMLResponse(f'<h1>{error.error}</h1>')
-    user = token.get('userinfo')
-    access_token = token.get('access_token')
-    if user and access_token:
-        request.session['user'] = dict(user)
-        request.session['access_token'] = access_token
-    return RedirectResponse(url='/')
-
-
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/test")
-def read_test():
-    print("Testing")
-    return {"Env var": os.getenv('TEST_ENV', "Var not set!")}
+@app.get('/login')
+async def login(request: Request):
+    '''
+    Construct a URL user can use to authenticate with IAM (auth code flow)
+    '''
+    redirect_uri = request.url_for('code')
+    authorization_url = await OAUTH_CLIENT.create_authorization_url()
+    return HTMLResponse("Please go to: {}&redirect_uri={}".format(authorization_url['url'], redirect_uri))
 
 
-@app.get("/test_auth", dependencies=[Depends(verify_permission_for_route)])
-async def read_test_auth():
-    print("Testing auth")
-    return {"Env var": os.getenv('TEST_ENV', "Var not set!")}
+@app.get('/code')
+async def code(request: Request):
+    '''
+    Strip the authorization code from the URL provided by IAM
+    '''
+    code = request.query_params.get('code')
+    return HTMLResponse('Authorization code is: {}'.format(code))
+
+
+@app.get('/token')
+async def token(request: Request, code: str) -> RedirectResponse:
+    '''
+    Use auth code (required as query param 'code') to retrieve token from IAM
+    '''
+    redirect_uri = request.url_for('code')
+    await OAUTH_CLIENT.load_server_metadata()
+    token_endpoint = OAUTH_CLIENT.server_metadata['token_endpoint']
+    params = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': redirect_uri,
+              'client_id': OAUTH_CLIENT.client_id, 'client_secret': OAUTH_CLIENT.client_secret}
+    token = requests.post(token_endpoint, params=params)
+    return JSONResponse(token.json())
+
+
+## TODO: Fix, currently cannot validate Bearer token retrieved above
+#
+@app.get("/test_auth")
+async def read_test_auth(request: Request):
+    token = await OAUTH_CLIENT.authorize_access_token(request)
+    print(token)
+    return {"Authenticated successfully", 200}
 
 
 @app.post("/resource", status_code=201)

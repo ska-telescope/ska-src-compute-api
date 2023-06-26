@@ -3,10 +3,10 @@
         "GET": "admin"
     },
     "/login": {
-        "GET": "admin"
+        "GET": "any"
     },
     "/auth": {
-        "GET": "admin"
+        "GET": "any"
     }
 }
   
