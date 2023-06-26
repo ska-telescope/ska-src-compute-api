@@ -10,7 +10,7 @@ RUN adduser --system --no-create-home --disabled-password --shell /bin/bash user
 
 COPY --chown=user . /opt/server
 
-RUN cd /opt/server && python3 -m pip install -r requirements.txt
+RUN cd /opt/server && python3 -m pip install -e .
 
 WORKDIR /opt/server
 

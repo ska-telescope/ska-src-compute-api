@@ -1,0 +1,10 @@
+{
+    "any": [],
+    "viewer": [
+      "{root_group}/roles/viewer"
+    ],
+    "admin": [
+      "{root_group}/roles/admin"
+    ]
+  }
+  
