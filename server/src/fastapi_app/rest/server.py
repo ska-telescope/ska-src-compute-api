@@ -1,15 +1,17 @@
 import os
 from typing import Union
+import uuid 
 
 import requests
-from authlib.integrations.starlette_client import OAuth, OAuthError
-from fastapi import Depends, FastAPI, HTTPException, status
+from authlib.integrations.requests_client import OAuth2Session
+from fastapi import Depends, FastAPI, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_app.rest.permissions import Permission
 from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse
+import urllib.parse
 
 config = Config('.env')
 
@@ -31,38 +33,38 @@ app.add_middleware(
 #
 # The <name> specified here must have a corresponding <name>_CLIENT_ID and <name>_CLIENT_SECRET
 # environment variable.
-oauth = OAuth(config)
-oauth.register(
-    name=oauth.config.get('CLIENT_NAME'),
-    server_metadata_url=oauth.config.get('CLIENT_CONF_URL'),
-    client_kwargs={
-        'scope': oauth.config.get('CLIENT_SCOPES')
-    }
-)
-OAUTH_CLIENT = getattr(oauth, oauth.config.get('CLIENT_NAME'))
+
+client_name = config.get('CLIENT_NAME')
+client_id = config.get("{}_CLIENT_ID".format(client_name))
+client_secret = config.get("{}_CLIENT_SECRET".format(client_name))
+client_scopes = config.get('CLIENT_SCOPES')
+
+# Get endpoints from oidc well_known
+client_well_known = requests.get(config.get('CLIENT_CONF_URL')).json()
+authorization_endpoint = client_well_known['authorization_endpoint']
+token_endpoint = client_well_known['token_endpoint']
+introspection_endpoint = client_well_known['introspection_endpoint']
+
+# Instantiate OAuth2 client
+client = OAuth2Session(client_id, client_secret, scope=client_scopes)
 
 ## Instantiate permissions and roles modules to check authZ for routes.
 #
-permission_definition_abspath = os.path.join(oauth.config.get('PERMISSIONS_RELPATH'),
-                                             oauth.config.get('PERMISSIONS_NAME'))
-roles_definition_abspath = os.path.join(oauth.config.get('ROLES_RELPATH'),
-                                        oauth.config.get('ROLES_NAME'))
+permission_definition_abspath = os.path.join(config.get('PERMISSIONS_RELPATH'),
+                                             config.get('PERMISSIONS_NAME'))
+roles_definition_abspath = os.path.join(config.get('ROLES_RELPATH'),
+                                        config.get('ROLES_NAME'))
 PERMISSION = Permission(permissions_definition_path=permission_definition_abspath,
                         roles_definition_path=roles_definition_abspath,
-                        root_group=oauth.config.get('PERMISSIONS_ROOT_GROUP'))
-
+                        root_group=config.get('PERMISSIONS_ROOT_GROUP'))
 
 ## Function to validate (and return) a token using the introspection endpoint.
 #
-async def validate_token_by_remote_introspection(request: Request) -> Union[dict, bool]:
-    print(request.session.get('user'))
-    if request.session.get('user') and request.session.get('access_token'):
-        if 'introspection_endpoint' not in OAUTH_CLIENT.server_metadata:
-            await OAUTH_CLIENT.load_server_metadata()
-        url = OAUTH_CLIENT.server_metadata['introspection_endpoint']
-        data = {'token': request.session.get('access_token'), 'token_type_hint': 'access_token'}
-        auth = (OAUTH_CLIENT.client_id, OAUTH_CLIENT.client_secret)
-        resp = requests.post(url, data=data, auth=auth)
+async def validate_token_by_remote_introspection(access_token: str) -> Union[dict, bool]:
+    if access_token:
+        data = {'token': access_token, 'token_type_hint': 'access_token'}
+        auth = (client_id, client_secret)
+        resp = requests.post(introspection_endpoint, data=data, auth=auth)
         resp.raise_for_status()
         resp_json = resp.json()
         if resp_json['active'] is not True:
@@ -73,9 +75,11 @@ async def validate_token_by_remote_introspection(request: Request) -> Union[dict
 
 ## Function to check permissions from user token groups.
 #
-async def verify_permission_for_route(request: Request) -> Union[HTTPException, RedirectResponse]:
-    introspected_token = await validate_token_by_remote_introspection(request)
-    print("Token is: {}".format(introspected_token))
+async def verify_permission_for_route(request: Request, Authorization: Union[str, None] = Header(default=None)) -> Union[HTTPException, RedirectResponse]:
+    if Authorization is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "You are not authorised to view this resource.")
+    access_token = Authorization.split('Bearer')[1].strip()
+    introspected_token = await validate_token_by_remote_introspection(access_token)
     if not introspected_token:
         groups = []
     else:
@@ -104,9 +108,9 @@ async def login(request: Request):
     '''
     Construct a URL user can use to authenticate with IAM (auth code flow)
     '''
-    redirect_uri = request.url_for('code')
-    authorization_url = await OAUTH_CLIENT.create_authorization_url()
-    return HTMLResponse("Please go to: {}&redirect_uri={}".format(authorization_url['url'], redirect_uri))
+    authorization_uri, state = client.create_authorization_url(authorization_endpoint)
+    authorization_uri = "{}&redirect_uri={}".format(authorization_uri, request.url_for("code"))
+    return HTMLResponse("{}".format(authorization_uri))
 
 
 @app.get('/code')
@@ -119,25 +123,23 @@ async def code(request: Request):
 
 
 @app.get('/token')
-async def token(request: Request, code: str) -> RedirectResponse:
+async def token(request: Request, code: str) -> JSONResponse:
     '''
     Use auth code (required as query param 'code') to retrieve token from IAM
     '''
-    redirect_uri = request.url_for('code')
-    await OAUTH_CLIENT.load_server_metadata()
-    token_endpoint = OAUTH_CLIENT.server_metadata['token_endpoint']
-    params = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': redirect_uri,
-              'client_id': OAUTH_CLIENT.client_id, 'client_secret': OAUTH_CLIENT.client_secret}
-    token = requests.post(token_endpoint, params=params)
-    return JSONResponse(token.json())
+    url = "{}?".format(token_endpoint)
+    params = {
+        'code': code,
+        'redirect_uri': request.url_for('code')
+    }
+    authorization_response = url + urllib.parse.urlencode(params)
+    token = client.fetch_token(token_endpoint, authorization_response=authorization_response, redirect_uri=request.url_for('code'))
+    #session_id = str(uuid.uuid4())
+    #SESSIONS[session_id] = token['access_token']
+    return JSONResponse(token['access_token'])
 
-
-## TODO: Fix, currently cannot validate Bearer token retrieved above
-#
-@app.get("/test_auth")
-async def read_test_auth(request: Request):
-    token = await OAUTH_CLIENT.authorize_access_token(request)
-    print(token)
+@app.get("/test_auth", dependencies=[Depends(verify_permission_for_route)])
+async def read_test_auth(request: Request, Authorization: Union[str, None] = Header(default=None)) -> Union[JSONResponse, HTTPException]:
     return {"Authenticated successfully", 200}
 
 
