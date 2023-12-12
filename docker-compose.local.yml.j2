@@ -1,0 +1,7 @@
+version: "3.5"
+services:
+  core:
+    environment:
+      DISABLE_AUTHENTICATION: "yes"
+    volumes:
+      - /home/eng/SKAO/src-service-apis/{{ repository_name }}:/opt/{{ repository_name }}

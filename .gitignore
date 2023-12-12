@@ -24,5 +24,7 @@ build/
 dist/
 *.egg-info/
 
+docker-compose.local.yml
 .env
-server/etc/helm/values.yaml
+etc/helm/values.yaml
+

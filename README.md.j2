@@ -1,0 +1,129 @@
+# SKA SRC {{ api_name_hyphenated_and_capitalised }} API
+
+This API is a templated SRCNet API. Please fill out this section with details about what the API does.
+
+[TOC]
+
+## Getting started
+
+A script has been provided to initialise this template. This initialisation performs only the necessary steps for
+local, **unauthenticated** development; by default the docker-compose enviromment does not connect the API with the
+Authentication or Permissions APIs (see Development -> Bypassing AuthN/Z). **This means all endpoints are publicly 
+accessible**.
+
+To initialise a template, you must first choose a suitable API name. This name should be lowercase with words separated
+by hyphens, e.g.
+
+```bash
+eng@ubuntu:~/SKAO/ska-src-template-api$ make init API_NAME=some-name
+```
+
+Good API names are short (but not to the detriment of understanding what they do!) and self-describing. Acronyms should
+be avoided.
+
+You should then follow the standard steps for deployment via docker-compose, discussed in the Deployment section.
+
+When the service has been deployed, navigate to http://localhost:8080/v1/www/docs/oper to view the frontend.
+
+## Authentication
+
+The following sections assume that the API has been integrated with both IAM and the Permissions API. This involves:
+
+- Creating an IAM client (for Services to obtain access via a `client_credentials` grant),
+- Passing the credentials (id/secret) to either `.env` files (docker-compose) or in the `values.yaml` (helm), and
+- Creating the permissions policy and loading it in to the Permissions API.
+
+Access can then be granted for either a User or Service.
+
+### User
+
+To access this API as a user, the user needs to have first authenticated with the SRCNet and to have exchanged the token 
+resulting from this initial authentication with one that allows access to this specific service. See the Authentication 
+Mechanism and Token Exchange Mechanism sections of the Authentication API for more specifics.
+
+### Service
+
+For service-to-service interactions, it is possible to obtain a token via a ***client_credentials*** grant to the
+{{ iam_client_name }} IAM client.
+
+## Authorisation
+
+Hereafter, the caller (either a user or another service) is assumed to have a valid token allowing access to this API. 
+Authenticated requests are then made by including this token in the header.
+
+The token audience must also match the expected audience, also defined in the {{ permissions_service_name }} permissions 
+policy (default: “{{ permissions_service_name }}”).
+
+### Restricting user access to routes using token scopes
+
+The presented token must include a specific scope expected by the service to be permitted access to all API routes. This 
+scope is defined in the {{ permissions_service_name }} permissions policy 
+(default: “{{ permissions_service_name }}-service”). 
+
+**This scope must also be added to the IAM permissions client otherwise the process of token instrospection will drop 
+this scope.**
+
+## Development
+
+Makefile targets have been included to facilitate easier and more consistent development against this API. The general 
+recipe is as follows:
+
+1. Depending on the fix type, create a new major/minor/patch branch, e.g. 
+    ```bash
+    $ make patch-branch NAME=some-name
+    ```
+    Note that this both creates and checkouts the branch.
+2. Make your changes.
+3. Create new code samples if necessary.
+   ```bash
+   $ make code-samples
+   ```
+4. Add your changes to the branch:
+    ```bash
+   $ git add ...
+    ```
+5. Either commit the changes manually (if no version increment is needed) or bump the version and commit, entering a 
+   commit message when prompted:
+    ```bash
+   $ make bump-and-commit
+    ```
+6. Push the changes upstream when ready:
+    ```bash
+   $ make push
+    ```
+
+Note that the CI pipeline will fail if python packages with the same semantic version are committed to the GitLab 
+Package Registry.
+
+### Bypassing AuthN/Z
+
+AuthN/Z can be bypassed for development by setting `DISABLE_AUTHENTICATION=yes` in the environment.
+
+## Deployment
+
+Deployment is managed by docker-compose or helm.
+
+The docker-compose file can be used to bring up the necessary services locally i.e. the REST API, setting the mandatory
+environment variables. Sensitive environment variables, including those relating to the IAM client, should be kept in
+`.env` files to avoid committing them to the repository.
+
+There is also a helm chart for deployment onto a k8s cluster.
+
+### Example via docker-compose
+
+Edit the `.env.template` file accordingly and rename to `.env`, then:
+
+```bash
+eng@ubuntu:~/SKAO/{{ python_package_name }}$ docker-compose up
+```
+
+### Example via Helm
+
+After editing the `values.yaml` (template in `/etc/helm/`):
+
+```bash
+$ create namespace {{ python_package_name }}
+$ helm install --namespace {{ python_package_name }} {{ python_package_name }} .
+```
+
+## References

@@ -1,0 +1,22 @@
+version: "3.5"
+services:
+  core:
+    container_name: {{ api_image_tag_prefix }}-core
+    image: {{ api_image_tag_prefix }}-core:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DISABLE_AUTHENTICATION: "yes"
+      API_ROOT_PATH:
+      API_SCHEME: http
+      IAM_CLIENT_CONF_URL: https://ska-iam.stfc.ac.uk/.well-known/openid-configuration
+      API_IAM_CLIENT_ID: some-uuid
+      API_IAM_CLIENT_SECRET:
+      API_IAM_CLIENT_SCOPES: openid profile
+      API_IAM_CLIENT_AUDIENCE: {{ iam_client_audience }}
+      PERMISSIONS_API_URL: https://permissions.srcdev.skao.int/api/v1
+      PERMISSIONS_SERVICE_NAME: {{ permissions_service_name }}
+      PERMISSIONS_SERVICE_VERSION: 1
+    ports:
+      - 8080:8080

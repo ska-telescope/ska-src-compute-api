@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: core
+  name: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: core
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        io.kompose.service: core
+    spec:
+      containers:
+      - env:
+        - name: API_ROOT_PATH
+          value: {% raw %}{{ .Values.svc.api.root_path }}{% endraw %}
+        - name: API_SCHEME
+          value: {% raw %}{{ .Values.svc.api.scheme }}{% endraw %}
+        - name: IAM_CLIENT_CONF_URL
+          value: {% raw %}{{ .Values.svc.api.iam_client_conf_url }}{% endraw %}
+        - name: API_IAM_CLIENT_ID
+          value: {% raw %}{{ .Values.svc.api.iam_client_id }}{% endraw %}
+        - name: API_IAM_CLIENT_SECRET
+          value: {% raw %}{{ .Values.svc.api.iam_client_secret }}{% endraw %}
+        - name: API_IAM_CLIENT_SCOPES
+          value: {% raw %}{{ .Values.svc.api.iam_client_scopes }}{% endraw %}
+        - name: API_IAM_CLIENT_AUDIENCE
+          value: {% raw %}{{ .Values.svc.api.iam_client_audience }}{% endraw %}
+        - name: PERMISSIONS_API_URL
+          value: {% raw %}{{ .Values.svc.api.permissions_api_url }}{% endraw %}
+        - name: PERMISSIONS_SERVICE_NAME
+          value: {% raw %}{{ .Values.svc.api.permissions_service_name }}{% endraw %}
+        - name: PERMISSIONS_SERVICE_VERSION
+          value: {% raw %}{{ .Values.svc.api.permissions_service_version | quote }}{% endraw %}
+        image: {% raw %}{{ .Values.image_registry_url }}{% endraw %}:{% raw %}{{ .Values.image_tag }}{% endraw %}
+        imagePullPolicy: Always
+        name: {{ chart_core_deployment_prefix }}-core
+        ports:
+        - containerPort: 8080
+        resources: {}
+        livenessProbe:
+          httpGet:
+            path: /v1/ping
+            port: 8080
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes: null
+status: {}
