@@ -1,29 +1,9 @@
 # SKA SRC {{ api_name_hyphenated_and_capitalised }} API
 
-This API is a templated SRCNet API. Please fill out this section with details about what the API does.
+This API has been generated from a templated SRCNet API. Please fill out this section with details about what the API
+does.
 
 [TOC]
-
-## Getting started
-
-A script has been provided to initialise this template. This initialisation performs only the necessary steps for
-local, **unauthenticated** development; by default the docker-compose enviromment does not connect the API with the
-Authentication or Permissions APIs (see Development -> Bypassing AuthN/Z). **This means all endpoints are publicly 
-accessible**.
-
-To initialise a template, you must first choose a suitable API name. This name should be lowercase with words separated
-by hyphens, e.g.
-
-```bash
-eng@ubuntu:~/SKAO/ska-src-template-api$ make init API_NAME=some-name
-```
-
-Good API names are short (but not to the detriment of understanding what they do!) and self-describing. Acronyms should
-be avoided.
-
-You should then follow the standard steps for deployment via docker-compose, discussed in the Deployment section.
-
-When the service has been deployed, navigate to http://localhost:8080/v1/www/docs/oper to view the frontend.
 
 ## Authentication
 
@@ -116,6 +96,8 @@ Edit the `.env.template` file accordingly and rename to `.env`, then:
 ```bash
 eng@ubuntu:~/SKAO/{{ python_package_name }}$ docker-compose up
 ```
+
+When the service has been deployed, navigate to http://localhost:8080/v1/www/docs/oper to view the (swagger) frontend.
 
 ### Example via Helm
 

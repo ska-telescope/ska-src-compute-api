@@ -105,6 +105,9 @@ export permissions_service_name=$(api_name_to_hyphenated_service_name "$api_name
 export repository_name=$(api_name_to_hyphenated_package_name "$api_name_hyphenated")                # ska-src-some-service-api
 export api_name_hyphenated_and_capitalised=$(api_name_to_capitalised "$api_name_hyphenated")        # Some-Service
 
+# Remove the placeholder README.md
+rm $root_path"/"README.md
+
 # Render all templates in $root_path.
 render_templates_in_directory $root_path "$api_name"
 
