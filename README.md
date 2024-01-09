@@ -21,4 +21,13 @@ eng@ubuntu:~/SKAO/ska-src-template-api$ make init API_NAME=some-name
 Good API names are short (but not to the detriment of understanding what they do!) and self-describing. Acronyms should
 be avoided.
 
+The init script requires the j2 CLI to be available, this can be installed for Python 3 via:
+```bash
+pip3 install j2cli
+```
+
+When invoked, the `init` script will create a new API with the chosen name, and produce documentation and code stubs
+from the templates in this repository. Finally, it will rename the top level directory to create a new code
+repository. This can be added to version control as a new project.
+
 Once the template has been initialised, consult the README for deployment via docker-compose.
