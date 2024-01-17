@@ -75,6 +75,44 @@ recipe is as follows:
 Note that the CI pipeline will fail if python packages with the same semantic version are committed to the GitLab 
 Package Registry.
 
+### Code Structure
+
+The repository is structured as follows:
+
+```
+.
+├── .env.template
+├── .gitlab-ci.yml
+├── bin
+├── docker-compose.yml
+├── Dockerfile
+├── etc
+│   ├── docker
+│   │   └── init.sh
+│   ├── helm
+│   │   ├── Chart.yaml
+│   │   ├── templates
+│   │   └── values.yaml.template
+│   └── scripts
+│       ├── generate-code-samples.sh
+│       ├── increment-app-version.sh
+│       └── increment-chart-version.sh
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── setup.py
+├── src
+│   └── {{ api_name_to_snakecase }}
+│       ├── client
+│       ├── common
+│       ├── models
+│       └── rest
+├── TODO.md
+└── VERSION
+```
+
+The API endpoint logic is within the `src/rest/server.py` with `/ping` and `/health` endpoints provided as a reference.
+
 ### Bypassing AuthN/Z
 
 AuthN/Z can be bypassed for development by setting `DISABLE_AUTHENTICATION=yes` in the environment.
