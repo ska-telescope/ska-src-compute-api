@@ -37,7 +37,7 @@ api_name_to_upper_camel_case() {
 
     IFS='-' read -ra words <<< "$input"
     for word in "${words[@]}"; do
-        result+=$(echo "${word^}" | sed 's/-//g')
+        result+=$(echo "$word" | awk '{print toupper(substr($0,1,1)) tolower(substr($0,2))}' | sed 's/-//g')
     done
 
     echo "$result"
@@ -83,6 +83,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 root_path=$(realpath "../..")   # this should evaluate to the repository base assuming script location is etc/scripts
+parent_path=$(realpath "../../..")   # this should evaluate to the repository parent dir
 
 # Check j2 command is available
 command -v j2 >/dev/null 2>&1 || { echo >&2 "Error: j2 is not installed. Exiting."; exit 1; }
@@ -105,16 +106,25 @@ export permissions_service_name=$(api_name_to_hyphenated_service_name "$api_name
 export repository_name=$(api_name_to_hyphenated_package_name "$api_name_hyphenated")                # ska-src-some-service-api
 export api_name_hyphenated_and_capitalised=$(api_name_to_capitalised "$api_name_hyphenated")        # Some-Service
 
+export package_path="${parent_path}/$(api_name_to_hyphenated_package_name "$api_name_hyphenated")"
+echo "Initialising new API from the template at: $package_path"
+
+# Create new top level directory for new API project
+if [ -d "$package_path" ]; then
+  echo "Error: Directory already exists: $package_path"
+  exit 1
+else
+  echo "Creating directory: $package_path" 
+  cp -r $root_path $package_path
+fi
+
 # Remove the placeholder README.md
-rm $root_path"/"README.md
+rm $package_path"/"README.md
 
 # Render all templates in $root_path.
-render_templates_in_directory $root_path "$api_name"
+render_templates_in_directory $package_path "$api_name"
 
 # Rename files and directories that have references to the template.
-mv $root_path"/bin/ska-src-template" $root_path"/bin/ska-src-"$api_name_hyphenated                                                                              # binary
-mv $root_path"/src/ska_src_template_api/client/template.py" $root_path"/src/ska_src_template_api/client/"$(api_name_to_snakecase "$api_name_hyphenated")".py"   # module name of client in source package
-mv $root_path"/src/ska_src_template_api" $root_path"/src/"$(api_name_to_snakecase_package_name "$api_name_hyphenated")                                          # source package name
-mv $root_path $(dirname $root_path)"/"$(api_name_to_hyphenated_package_name "$api_name_hyphenated")                                                             # repository root
-
-
+mv $package_path"/bin/ska-src-template" $package_path"/bin/ska-src-"$api_name_hyphenated                                                                              # binary
+mv $package_path"/src/ska_src_template_api/client/template.py" $package_path"/src/ska_src_template_api/client/"$(api_name_to_snakecase "$api_name_hyphenated")".py"   # module name of client in source package
+mv $package_path"/src/ska_src_template_api" $package_path"/src/"$(api_name_to_snakecase_package_name "$api_name_hyphenated")                                          # source package name

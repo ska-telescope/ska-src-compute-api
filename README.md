@@ -26,8 +26,8 @@ The init script requires the j2 CLI to be available, this can be installed for P
 pip3 install j2cli
 ```
 
-When invoked, the `init` script will create a new API with the chosen name, and produce documentation and code stubs
-from the templates in this repository. Finally, it will rename the top level directory to create a new code
-repository. This can be added to version control as a new project.
+When invoked, the `init` script will create a new API code repository with the chosen name in the *parent*
+directory of the `ska-src-template-api` service, and generate documentation and code stubs from the templates
+in this repository. This can be added to version control as a new project.
 
 Once the template has been initialised, consult the README for deployment via docker-compose.
