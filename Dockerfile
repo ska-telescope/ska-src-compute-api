@@ -5,12 +5,12 @@ USER root
 RUN groupadd user
 RUN adduser --system --no-create-home --disabled-password --shell /bin/bash user
 
-COPY --chown=user . /opt/{{ repository_name }}
+COPY --chown=user . /opt/ska-src-compute-api
 
 RUN python3 -m pip install ska-src-permissions-api --index-url https://gitlab.com/api/v4/projects/48060714/packages/pypi/simple
-RUN cd /opt/{{ repository_name }} && python3 -m pip install -e .
+RUN cd /opt/ska-src-compute-api && python3 -m pip install -e .
 
-WORKDIR /opt/{{ repository_name }}
+WORKDIR /opt/ska-src-compute-api
 
 ENV API_ROOT_PATH ''
 ENV API_SCHEME ''

@@ -28,3 +28,5 @@ docker-compose.local.yml
 .env
 etc/helm/values.yaml
 
+# IDE specific files
+.idea

@@ -16,8 +16,8 @@ build-api:
   stage: build
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build . -f Dockerfile --tag $API_IMAGE_NAME:{{ api_image_tag_prefix }}.srcdev.skao.int
-    - docker push $API_IMAGE_NAME:{{ api_image_tag_prefix }}.srcdev.skao.int
+    - docker build . -f Dockerfile --tag $API_IMAGE_NAME:compute.srcdev.skao.int
+    - docker push $API_IMAGE_NAME:compute.srcdev.skao.int
 
 helm-publish:
   only:
@@ -29,7 +29,7 @@ helm-publish:
   script:
     - helm repo add --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD repo ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/stable
     - helm package etc/helm
-    - export CHART_NAME=`ls | grep {{ helm_chart_name }}*.tgz`
+    - export CHART_NAME=`ls | grep ska-src-compute-api*.tgz`
     - helm plugin install https://github.com/chartmuseum/helm-push
     - helm cm-push $CHART_NAME repo
 

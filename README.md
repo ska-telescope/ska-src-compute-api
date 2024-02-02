@@ -1,33 +1,151 @@
-# SKA SRC Template API
+# SKA SRC Compute API
 
-This API is the template SRCNet API.
+This API has been generated from a templated SRCNet API. Please fill out this section with details about what the API
+does.
 
 [TOC]
 
-## Getting started
+## Authentication
 
-A script has been provided to initialise this template. This initialisation performs only the necessary steps for
-local, **unauthenticated** development; by default the docker-compose enviromment does not connect the API with the
-Authentication or Permissions APIs (see Development -> Bypassing AuthN/Z). **This means all endpoints are publicly 
-accessible**.
+The following sections assume that the API has been integrated with both IAM and the Permissions API. This involves:
 
-To initialise a template, you must first choose a suitable API name. This name should be lowercase with words separated
-by hyphens, e.g.
+- Creating an IAM client (for Services to obtain access via a `client_credentials` grant),
+- Passing the credentials (id/secret) to either `.env` files (docker-compose) or in the `values.yaml` (helm), and
+- Creating the permissions policy and loading it in to the Permissions API.
 
-```bash
-eng@ubuntu:~/SKAO/ska-src-template-api$ make init API_NAME=some-name
+Access can then be granted for either a User or Service.
+
+### User
+
+To access this API as a user, the user needs to have first authenticated with the SRCNet and to have exchanged the token 
+resulting from this initial authentication with one that allows access to this specific service. See the Authentication 
+Mechanism and Token Exchange Mechanism sections of the Authentication API for more specifics.
+
+### Service
+
+For service-to-service interactions, it is possible to obtain a token via a ***client_credentials*** grant to the
+ska-src-compute-api IAM client.
+
+## Authorisation
+
+Hereafter, the caller (either a user or another service) is assumed to have a valid token allowing access to this API. 
+Authenticated requests are then made by including this token in the header.
+
+The token audience must also match the expected audience, also defined in the compute-api permissions 
+policy (default: “compute-api”).
+
+### Restricting user access to routes using token scopes
+
+The presented token must include a specific scope expected by the service to be permitted access to all API routes. This 
+scope is defined in the compute-api permissions policy 
+(default: “compute-api-service”). 
+
+**This scope must also be added to the IAM permissions client otherwise the process of token instrospection will drop 
+this scope.**
+
+## Development
+
+Makefile targets have been included to facilitate easier and more consistent development against this API. The general 
+recipe is as follows:
+
+1. Depending on the fix type, create a new major/minor/patch branch, e.g. 
+    ```bash
+    $ make patch-branch NAME=some-name
+    ```
+    Note that this both creates and checkouts the branch.
+2. Make your changes.
+3. Create new code samples if necessary.
+   ```bash
+   $ make code-samples
+   ```
+4. Add your changes to the branch:
+    ```bash
+   $ git add ...
+    ```
+5. Either commit the changes manually (if no version increment is needed) or bump the version and commit, entering a 
+   commit message when prompted:
+    ```bash
+   $ make bump-and-commit
+    ```
+6. Push the changes upstream when ready:
+    ```bash
+   $ make push
+    ```
+
+Note that the CI pipeline will fail if python packages with the same semantic version are committed to the GitLab 
+Package Registry.
+
+### Code Structure
+
+The repository is structured as follows:
+
+```
+.
+├── .env.template
+├── .gitlab-ci.yml
+├── bin
+├── docker-compose.yml
+├── Dockerfile
+├── etc
+│   ├── docker
+│   │   └── init.sh
+│   ├── helm
+│   │   ├── Chart.yaml
+│   │   ├── templates
+│   │   └── values.yaml.template
+│   └── scripts
+│       ├── generate-code-samples.sh
+│       ├── increment-app-version.sh
+│       └── increment-chart-version.sh
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── setup.py
+├── src
+│   └── 
+│       ├── client
+│       ├── common
+│       ├── models
+│       └── rest
+├── TODO.md
+└── VERSION
 ```
 
-Good API names are short (but not to the detriment of understanding what they do!) and self-describing. Acronyms should
-be avoided.
+The API endpoint logic is within the `src/rest/server.py` with `/ping` and `/health` endpoints provided as a reference.
 
-The init script requires the j2 CLI to be available, this can be installed for Python 3 via:
+### Bypassing AuthN/Z
+
+AuthN/Z can be bypassed for development by setting `DISABLE_AUTHENTICATION=yes` in the environment.
+
+## Deployment
+
+Deployment is managed by docker-compose or helm.
+
+The docker-compose file can be used to bring up the necessary services locally i.e. the REST API, setting the mandatory
+environment variables. Sensitive environment variables, including those relating to the IAM client, should be kept in
+`.env` files to avoid committing them to the repository.
+
+There is also a helm chart for deployment onto a k8s cluster.
+
+### Example via docker-compose
+
+Edit the `.env.template` file accordingly and rename to `.env`, then:
+
 ```bash
-pip3 install j2cli
+eng@ubuntu:~/SKAO/ska_src_compute_api$ docker-compose up
 ```
 
-When invoked, the `init` script will create a new API code repository with the chosen name in the *parent*
-directory of the `ska-src-template-api` service, and generate documentation and code stubs from the templates
-in this repository. This can be added to version control as a new project.
+When the service has been deployed, navigate to http://localhost:8080/v1/www/docs/oper to view the (swagger) frontend.
 
-Once the template has been initialised, consult the README for deployment via docker-compose.
+Similarly, you can test the service locally by calling http://localhost:8080/v1/ping.
+
+### Example via Helm
+
+After editing the `values.yaml` (template in `/etc/helm/`):
+
+```bash
+$ create namespace ska_src_compute_api
+$ helm install --namespace ska_src_compute_api ska_src_compute_api .
+```
+
+## References

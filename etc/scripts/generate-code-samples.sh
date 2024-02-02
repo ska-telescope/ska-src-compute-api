@@ -1,7 +1,7 @@
 #!/bin/sh
 # Generate openapi code samples automatically from an openapi.json schema.
 SERVER=http://localhost:8080/v1
-OUTPUT_DIR=../../src/{{ python_package_name }}/rest/request-code-samples
+OUTPUT_DIR=../../src/ska_src_compute_api/rest/request-code-samples
 
 # get the openapi.json schema and make sure the server attr is populated
 curl http://localhost:8080/v1/openapi.json --output openapi.json
@@ -42,7 +42,7 @@ for path, methods in openapi_schema.get("paths").items():
       source = unquote(code_sample.get("source"))
       filename = "{}-{}-{}.j2".format(lang, path.lstrip("/").replace("/", "-"), method)
       with open(os.path.join("'$OUTPUT_DIR'", filename), "w") as f:
-        f.write(source.replace("'$SERVER'", "{{ api_server_url }}"))
+        f.write(source.replace("'$SERVER'", ""))
 '
 
 rm openapi.json

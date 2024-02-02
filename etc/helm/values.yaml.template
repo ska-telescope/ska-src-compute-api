@@ -1,5 +1,5 @@
-image_registry_url: registry.gitlab.com/ska-telescope/src/src-service-apis/{{ image_repository_name }}/api
-image_tag: {{ api_image_tag_prefix }}.srcdev.skao.int
+image_registry_url: registry.gitlab.com/ska-telescope/src/src-service-apis/ska-src-compute-api/api
+image_tag: compute.srcdev.skao.int
 svc:
   api:
     root_path: /api
@@ -8,11 +8,11 @@ svc:
     iam_client_id:
     iam_client_secret:
     iam_client_scopes: "openid profile"
-    iam_client_audience: {{ iam_client_audience }}
+    iam_client_audience: compute-api
     permissions_api_url: https://permissions.srcdev.skao.int/api/v1
-    permissions_service_name: {{ permissions_service_name }}
+    permissions_service_name: compute-api
     permissions_service_version: 1
 ing:
   api:
-    host: {{ api_ingress_host_prefix }}.srcdev.skao.int
+    host: compute.srcdev.skao.int
 

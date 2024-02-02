@@ -16,14 +16,14 @@ data_files = [
 scripts = glob.glob('bin/*')
 
 setup(
-    name='{{ python_package_name }}',
+    name='ska_src_compute_api',
     version=version,
-    description='The {{ api_name_hyphenated }} API for SRCNet.',
+    description='The compute API for SRCNet.',
     url='',
     author='rob barnsley',
     author_email='rob.barnsley@skao.int',
-    packages=['{{ python_package_name }}.rest', '{{ python_package_name }}.common', '{{ python_package_name }}.client',
-              '{{ python_package_name }}.models'],
+    packages=['ska_src_compute_api.rest', 'ska_src_compute_api.common', 'ska_src_compute_api.client',
+              'ska_src_compute_api.models'],
     package_dir={'': 'src'},
     data_files=data_files,
     scripts=scripts,

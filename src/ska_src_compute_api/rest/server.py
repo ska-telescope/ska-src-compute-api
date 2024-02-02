@@ -17,10 +17,10 @@ from starlette.config import Config
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from {{ python_package_name }} import models
-from {{ python_package_name }}.common.constants import Constants
-from {{ python_package_name }}.common.exceptions import handle_exceptions, PermissionDenied
-from {{ python_package_name }}.common.utility import convert_readme_to_html_docs, get_api_server_url_from_request, \
+from ska_src_compute_api import models
+from ska_src_compute_api.common.constants import Constants
+from ska_src_compute_api.common.exceptions import handle_exceptions, PermissionDenied
+from ska_src_compute_api.common.utility import convert_readme_to_html_docs, get_api_server_url_from_request, \
     get_base_url_from_request, get_url_for_app_from_request
 from ska_src_permissions_api.client.permissions import PermissionsClient
 
@@ -45,7 +45,7 @@ app.add_middleware(CORSMiddleware, **CORSMiddleware_params)
 #
 security = HTTPBearer()
 
-# Instantiate an OAuth2 request session for the {{ python_package_name }} client.
+# Instantiate an OAuth2 request session for the ska_src_compute_api client.
 #
 API_IAM_CLIENT = OAuth2Session(config.get("API_IAM_CLIENT_ID"),
                                config.get("API_IAM_CLIENT_SECRET"),
@@ -142,7 +142,7 @@ async def oper_docs(request: Request) -> TEMPLATES.TemplateResponse:
     return TEMPLATES.TemplateResponse("docs.html", {
         "request": request,
         "base_url": get_base_url_from_request(request, config.get('API_SCHEME', default='http')),
-        "page_title": "{{ api_name_hyphenated_and_capitalised }} API Operator Documentation",
+        "page_title": "Compute API Operator Documentation",
         "openapi_schema": openapi_schema_template.render({
             "api_server_url": get_api_server_url_from_request(request, config.get('API_SCHEME', default='http'))
         }),
@@ -185,7 +185,7 @@ async def user_docs(request: Request) -> TEMPLATES.TemplateResponse:
     return TEMPLATES.TemplateResponse("docs.html", {
         "request": request,
         "base_url": get_base_url_from_request(request, config.get('API_SCHEME', default='http')),
-        "page_title": "{{ api_name_hyphenated_and_capitalised }} API User Documentation",
+        "page_title": "Compute API User Documentation",
         "openapi_schema": openapi_schema_template.render({
             "api_server_url": get_api_server_url_from_request(request, config.get('API_SCHEME', default='http'))
         }),
@@ -270,7 +270,7 @@ for route in app.routes:
         subapp_base_path = '{}{}'.format(os.environ.get('API_ROOT_PATH', default=''), route.path)
         subapp.openapi()
         subapp.openapi_schema['servers'] = [{"url": subapp_base_path}]
-        subapp.openapi_schema['info']['title'] = '{{ api_name_hyphenated_and_capitalised }} API Overview'
+        subapp.openapi_schema['info']['title'] = 'Compute API Overview'
         subapp.openapi_schema['tags'] = [
             {"name": "Status", "description": "Operations describing the status of the API.", "x-tag-expanded": False},
         ]
