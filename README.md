@@ -40,7 +40,7 @@ The presented token must include a specific scope expected by the service to be 
 scope is defined in the compute-api permissions policy 
 (default: “compute-api-service”). 
 
-**This scope must also be added to the IAM permissions client otherwise the process of token instrospection will drop 
+**This scope must also be added to the IAM permissions client otherwise the process of token introspection will drop 
 this scope.**
 
 ## Development
@@ -147,5 +147,40 @@ After editing the `values.yaml` (template in `/etc/helm/`):
 $ create namespace ska_src_compute_api
 $ helm install --namespace ska_src_compute_api ska_src_compute_api .
 ```
+
+### Return codes
+For several end points, the API will provide return codes to reflect the reply. The following table states the meaning
+of the return codes per API end point. Each code will be returned together with a human-readable string specifying 
+what the actual reason for the code is so that a user can decide how to change their request to be successful.
+#### /query and /provision
+| code | meaning                              | text content                                                           |
+|------|--------------------------------------|------------------------------------------------------------------------|
+| 0    | Successful (resources are available) | OK                                                                     |
+| 1    | Resources do not exist               | "(XYZ) not available" where XYZ is a (list of) resource(s).            |
+| 2    | Resources unavailable right now      | "(XYZ) not bookable" where XYZ is a (list of) resource(s).             |
+| 3    | Input validation error               | "Input can not be validated. (specification list)"                     |
+| 4    | Internal error                       | "Internal error (specification)" (e.g. "could not connect to backend") |
+| 255  | Unexpected error                     | If possible and applicable: a description                              |
+
+#### /submit
+| code | meaning                     | text content                                                                          |
+|------|-----------------------------|---------------------------------------------------------------------------------------|
+| 0    | Successful (job submitted)  | OK                                                                                    |
+| 1    | Job validation error        | "Job cannot be executed: ABC" e.g. ABC being "data not in this location"              |
+| 2    | Invalid provision           | "Invalid provision: ABC" ABC could be "provision ID unknown" or "provision not valid" |
+| 3    | Input validation error      | "Input can not be validated (line X)"                                                 |
+| 4    | Internal error              | "Internal error (specification)" (e.g. "could not connect to backend")                |
+| 255  | Unexpected error            | If possible and applicable: a description                                             |
+
+#### job status
+| code | meaning               | text content                                                                                                   |
+|------|-----------------------|----------------------------------------------------------------------------------------------------------------|
+| 0    | Successful (job done) | OK                                                                                                             |
+| 1    | Job running           | "Running..."                                                                                                   |
+| 2    | Execution error       | "Execution error: (XYZ)" XYZ describes the cause (e.g. ran out of certain resources, application crashed, ...) |
+| 3    | System error          | "System error: (XYZ)" XYZ describes the cause (e.g. computer shut down, disk failed, ...)                      |
+| 4    | Internal error        | "Internal error (specification)" (e.g. "could not connect to backend")                                         |
+| 5    | Access denied         | "Access denied"                                                                                                |
+| 255  | Unexpected error      | If applicable a description                                                                                    |
 
 ## References

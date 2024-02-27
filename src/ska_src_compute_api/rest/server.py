@@ -4,6 +4,7 @@ import json
 import os
 import time
 from typing import Union
+from datetime import datetime
 
 from authlib.integrations.requests_client import OAuth2Session
 from fastapi import FastAPI, Depends, HTTPException, status, Path, Body, Query
@@ -248,6 +249,70 @@ async def health(request: Request):
         }
     )
 
+@api_version(1)
+@app.get('/query/',
+         responses={
+             200: {"model": models.response.QueryResponse}
+         },
+         tags=["Query"],
+         summary="Query for general compute availability.")
+@handle_exceptions
+async def query(query_input: models.QueryInput):
+    """ Query for availability """
+    return JSONResponse({
+        'response_code': "0",
+        "response_text": "OK"
+    })
+
+@api_version(1)
+@app.post('/provision',
+         responses={
+             200: {"model": models.response.ProvisionResponse}
+         },
+         tags=["Submit"],
+         summary="Query for general compute availability snd provision resources.")
+@handle_exceptions
+async def provision(request: Request):
+    """ Query for availability and provision resources."""
+    return JSONResponse({
+        'response_code': "0",
+        "response_text": "OK",
+        "provision_id":"24-surf-prov",
+        "provision_validity": datetime.now()
+    })
+
+@api_version(1)
+@app.post('/provision/{provision_id}/submit',
+         responses={
+             200: {"model": models.response.ProvisionResponse}
+         },
+         tags=["Submit" ],
+         summary="Submit job for the provision.")
+@handle_exceptions
+async def submit(request: Request, provision_id:str):
+    """ Submit job to be executed using the provision."""
+    return JSONResponse({
+        'response_code': "0",
+        "response_text": "OK",
+        "job_id": "24-surf-job",
+    })
+
+@api_version(1)
+@app.get('/provision/{provision_id}/{job_id}/status',
+         responses={
+             200: {"model": models.response.JobStatusResponse}
+         },
+         tags=["Submit"],
+         summary="Status information for a submitted job.")
+@handle_exceptions
+async def get_job_status(request: Request, provision_id: str, job_id: str):
+    """See the satus of a submitted job."""
+    return JSONResponse({
+        'status_code': "1",
+        "response_text": "Running, 3/5 steps done",
+        "logging": "running job 1...\nDONE!!\nrunning job 2...\nResults found\nrunning job3 ...\nrunning job 4...",
+        "output_data":"https://datastpre/surf.nl/SKAO/jobs/24-surf/output_data/"
+    })
 # Versionise the API.
 #
 versions = versionize(
