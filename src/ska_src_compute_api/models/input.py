@@ -1,7 +1,7 @@
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 from typing import Optional
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def validate_model(data, model):
@@ -28,13 +28,13 @@ class QueryInput(Input):
         A100 = "A100"
         RTX4090 = "RTX4090"
         RX7900XT = "RX7900XT"
-    data_location: str
-    data_size: int
-    output_data_size: int
-    memory: int
-    cpu_cores: int
-    runtime: int
-    gpu_model: Optional[GPU]
-    deadline: datetime
+    data_location: str = Field(examples=["surf"], description="Data location")
+    data_size: int = Field(description="Input data size (in GB)", examples=[60000])
+    output_data_size: int = Field(description="Output data size (in GB)", examples=[8000])
+    memory: int = Field(description="Memory required (in GB)", examples=[196])
+    cpu_cores: int = Field(description="Number of CPU cores required", examples=[16])
+    runtime: int = Field(description="Expected runtime (in hours)", examples=[72])
+    gpu_model: Optional[GPU] = Field(description="GPU model required", examples=["K40"])
+    deadline: datetime = Field(description="Deadline for the processing", example=datetime.now() + timedelta(days=10))
 
 

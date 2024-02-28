@@ -250,19 +250,18 @@ async def health(request: Request):
     )
 
 @api_version(1)
-@app.get('/query/',
+@app.get('/query',
          responses={
-             200: {"model": models.response.QueryResponse}
+             200: {"model": models.QueryResponse}
          },
          tags=["Query"],
          summary="Query for general compute availability.")
 @handle_exceptions
 async def query(query_input: models.QueryInput):
     """ Query for availability """
-    return JSONResponse({
-        'response_code': "0",
-        "response_text": "OK"
-    })
+    print("AAAA")
+    return query_input
+
 
 @api_version(1)
 @app.post('/provision',
