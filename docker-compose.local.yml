@@ -1,0 +1,11 @@
+version: "3.5"
+services:
+  core:
+    extends:
+      file: docker-compose.yml
+      service: core
+    environment:
+      DISABLE_AUTHENTICATION: "yes"
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ${HOME}/work/24/src_compute/ska-src-compute-api:/opt/ska-src-compute-api
