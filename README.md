@@ -152,27 +152,34 @@ $ helm install --namespace ska_src_compute_api ska_src_compute_api .
 For several end points, the API will provide return codes to reflect the reply. The following table states the meaning
 of the return codes per API end point. Each code will be returned together with a human-readable string specifying 
 what the actual reason for the code is so that a user can decide how to change their request to be successful.
-#### /query and /provision
+
+#### JSON parsing
+When JSON parsing fails, the framework will return an HTTP 422 error, giving some hints on what data is missing. 
+
+#### /query and /provision (POST)
+Docs URL (query): `/v1/www/docs/oper#post-/query`
+Docs URL (provison): `/v1/www/docs/oper#post-/provision`
+
 | code | meaning                              | text content                                                           |
 |------|--------------------------------------|------------------------------------------------------------------------|
 | 0    | Successful (resources are available) | OK                                                                     |
 | 1    | Resources do not exist               | "(XYZ) not available" where XYZ is a (list of) resource(s).            |
 | 2    | Resources unavailable right now      | "(XYZ) not bookable" where XYZ is a (list of) resource(s).             |
-| 3    | Input validation error               | "Input can not be validated. (specification list)"                     |
-| 4    | Internal error                       | "Internal error (specification)" (e.g. "could not connect to backend") |
+| 3    | Internal error                       | "Internal error (specification)" (e.g. "could not connect to backend") |
 | 255  | Unexpected error                     | If possible and applicable: a description                              |
 
 #### /submit
+Docs URL: `v1/www/docs/oper#post-/submit` (POST)
 | code | meaning                     | text content                                                                          |
 |------|-----------------------------|---------------------------------------------------------------------------------------|
 | 0    | Successful (job submitted)  | OK                                                                                    |
 | 1    | Job validation error        | "Job cannot be executed: ABC" e.g. ABC being "data not in this location"              |
 | 2    | Invalid provision           | "Invalid provision: ABC" ABC could be "provision ID unknown" or "provision not valid" |
-| 3    | Input validation error      | "Input can not be validated (line X)"                                                 |
-| 4    | Internal error              | "Internal error (specification)" (e.g. "could not connect to backend")                |
+| 3    | Internal error              | "Internal error (specification)" (e.g. "could not connect to backend")                |
 | 255  | Unexpected error            | If possible and applicable: a description                                             |
 
-#### job status
+#### job status (GET)
+Docs URL: `v1/www/docs/oper#get-/provision/-provision_id-/-job_id-/status`
 | code | meaning               | text content                                                                                                   |
 |------|-----------------------|----------------------------------------------------------------------------------------------------------------|
 | 0    | Successful (job done) | OK                                                                                                             |

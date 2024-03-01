@@ -7,7 +7,7 @@ from typing import Union
 from datetime import datetime
 
 from authlib.integrations.requests_client import OAuth2Session
-from fastapi import FastAPI, Depends, HTTPException, status, Path, Body, Query
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from fastapi.staticfiles import StaticFiles
@@ -24,12 +24,27 @@ from ska_src_compute_api.common.exceptions import handle_exceptions, PermissionD
 from ska_src_compute_api.common.utility import convert_readme_to_html_docs, get_api_server_url_from_request, \
     get_base_url_from_request, get_url_for_app_from_request
 from ska_src_permissions_api.client.permissions import PermissionsClient
+from response_example import query_resources, provision_resources
+
+from sqlalchemy.orm import Session
+from ska_src_compute_api.database.database import SessionLocal
 
 config = Config('.env')
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 # Debug mode (runs unauthenticated)
 #
 DEBUG = True if config.get("DISABLE_AUTHENTICATION", default=None) == 'yes' else False
+
+
 
 # Instantiate FastAPI() allowing CORS. Static mounts must be added later after the versionize() call.
 #
@@ -250,7 +265,7 @@ async def health(request: Request):
     )
 
 @api_version(1)
-@app.get('/query',
+@app.post('/query',
          responses={
              200: {"model": models.QueryResponse}
          },
@@ -259,8 +274,7 @@ async def health(request: Request):
 @handle_exceptions
 async def query(query_input: models.QueryInput):
     """ Query for availability """
-    print("AAAA")
-    return query_input
+    return query_resources(query_input)
 
 
 @api_version(1)
@@ -271,21 +285,17 @@ async def query(query_input: models.QueryInput):
          tags=["Submit"],
          summary="Query for general compute availability snd provision resources.")
 @handle_exceptions
-async def provision(request: Request):
+async def provision(provision_input: models.QueryInput, db: Session = Depends(get_db)):
     """ Query for availability and provision resources."""
-    return JSONResponse({
-        'response_code': "0",
-        "response_text": "OK",
-        "provision_id":"24-surf-prov",
-        "provision_validity": datetime.now()
-    })
+    return provision_resources(provision_input, db)
+
 
 @api_version(1)
 @app.post('/provision/{provision_id}/submit',
          responses={
-             200: {"model": models.response.ProvisionResponse}
+             200: {"model": models.response.JobSubmissionResponse}
          },
-         tags=["Submit" ],
+         tags=["Submit"],
          summary="Submit job for the provision.")
 @handle_exceptions
 async def submit(request: Request, provision_id:str):

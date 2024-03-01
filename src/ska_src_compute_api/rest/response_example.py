@@ -1,38 +1,56 @@
-import json
-from ska_src_compute_api.models import input
-from datetime import datetime
+from ska_src_compute_api.models import QueryInput, QueryResponse, ProvisionResponse
+from datetime import datetime, timedelta
+from ska_src_compute_api.database import crud, models
+from ska_src_compute_api.database.database import engine
+from sqlalchemy.orm import Session
 
-def query_resources(json_doc: str) -> dict:
+models.Base.metadata.create_all(bind=engine)
+
+def query_resources(query_input: QueryInput) -> QueryResponse:
     my_num_cpu = 100
     my_current_cpu_avail = 40
     my_gpu = ["K40", "RX7900XT"]
-    my_max_mem = 100000
-    json_data = json.loads(json_doc)
-    response_code, response_text = input.validate_model(json_data, input.QueryInput)
-    if json_data['data_location'] != "Demo City":
-        response_code = 4
+    my_max_mem = 100
+    response_code, response_text = 0, "Ok"
+    if query_input.data_location != "Demo City":
+        response_code = 3
         response_text = "Internal error. Could not connect to the database."
+        return QueryResponse.parse_obj({"response_code": response_code, "response_text": response_text})
     availability = True
     unavail_msg = ""
-    if not response_code:
-        if json_data["cpu_cores"] > my_num_cpu:
-            availability = False
-            unavail_msg += "Number of requested CPU cores not available. "
-        if json_data["gpu_model"] not in my_gpu:
-            availability = False
-            unavail_msg += f"{json_data['gpu_model']} GPU not available"
-        if json_data['memory_mb'] > my_max_mem:
-            availability = False
-            unavail_msg += "Requested memory not available"
-        if not availability:
-            response_code = 1
-            response_text = unavail_msg
-    if not response_code:
-        if json_data["cpu_cores"] > my_current_cpu_avail:
-            availability = False
-            unavail_msg = "Number of requested CPU cores not bookable."
-        if not availability:
-            response_code = 2
-            response_text = unavail_msg
+    if query_input.cpu_cores > my_num_cpu:
+        availability = False
+        unavail_msg += "Number of requested CPU cores not available. "
+    if query_input.gpu_model not in my_gpu:
+        availability = False
+        unavail_msg += f"{query_input.gpu_model} GPU not available"
+    if query_input.memory > my_max_mem:
+        availability = False
+        unavail_msg += "Requested memory not available"
+    if not availability:
+        response_code = 1
+        response_text = unavail_msg
+        return QueryResponse.parse_obj({"response_code": response_code, "response_text": response_text})
+    if query_input.cpu_cores > my_current_cpu_avail and query_input.deadline < datetime.now()+timedelta(days=5):
+        availability = False
+        unavail_msg = "Number of requested CPU cores not bookable."
+    if not availability:
+        response_code = 2
+        response_text = unavail_msg
+    return QueryResponse.parse_obj({"response_code": response_code, "response_text": response_text})
 
-    return {"response_code": response_code, "response_text":response_text}
+
+def provision_resources(provision_input: QueryInput, db:Session):
+    user = "grange@asron.sdc.skao.int"
+    availability = query_resources(provision_input)
+    if availability.response_code:
+        return availability
+    provision = crud.add_provision(db, provision_input, user)
+    my_site = "demo.city"
+    provision_ref = f"{my_site}-{provision.id}.prov"
+    return ProvisionResponse.parse_obj({"response_code": availability.response_code,
+                                        "response_text": availability.response_text,
+                                        "provision_id": provision_ref,
+                                        "provision_validity": provision.validity})
+
+
