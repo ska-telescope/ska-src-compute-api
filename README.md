@@ -174,8 +174,9 @@ Docs URL: `v1/www/docs/oper#post-/submit` (POST)
 |------|-----------------------------|---------------------------------------------------------------------------------------|
 | 0    | Successful (job submitted)  | OK                                                                                    |
 | 1    | Job validation error        | "Job cannot be executed: ABC" e.g. ABC being "data not in this location"              |
-| 2    | Invalid provision           | "Invalid provision: ABC" ABC could be "provision ID unknown" or "provision not valid" |
+| 2    | Invalid provision           | "Invalid provision: ABC" ABC could be "provision ID unknown" or "provision expired"   |
 | 3    | Internal error              | "Internal error (specification)" (e.g. "could not connect to backend")                |
+| 4    | Access denied               | "Access denied"                                                                       |
 | 255  | Unexpected error            | If possible and applicable: a description                                             |
 
 #### job status (GET)
@@ -184,10 +185,12 @@ Docs URL: `v1/www/docs/oper#get-/provision/-provision_id-/-job_id-/status`
 |------|-----------------------|----------------------------------------------------------------------------------------------------------------|
 | 0    | Successful (job done) | OK                                                                                                             |
 | 1    | Job running           | "Running..."                                                                                                   |
-| 2    | Execution error       | "Execution error: (XYZ)" XYZ describes the cause (e.g. ran out of certain resources, application crashed, ...) |
-| 3    | System error          | "System error: (XYZ)" XYZ describes the cause (e.g. computer shut down, disk failed, ...)                      |
-| 4    | Internal error        | "Internal error (specification)" (e.g. "could not connect to backend")                                         |
-| 5    | Access denied         | "Access denied"                                                                                                |
+| 2    | Invalid provision     | "Invalid job: ABC" ABC could be "job does not exist"   |
+| 3    | Internal error        | "Internal error (specification)" (e.g. "could not connect to backend")                                         |
+| 4    | Access denied         | "Access denied"                                                                                                |
+| 5    | Execution error       | "Execution error: (XYZ)" XYZ describes the cause (e.g. ran out of certain resources, application crashed, ...) |
+| 6    | System error          | "System error: (XYZ)" XYZ describes the cause (e.g. computer shut down, disk failed, ...)                      |
+
 | 255  | Unexpected error      | If applicable a description                                                                                    |
 
 ## References

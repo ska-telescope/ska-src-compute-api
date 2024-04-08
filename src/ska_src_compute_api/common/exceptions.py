@@ -6,7 +6,8 @@ from fastapi import HTTPException, status
 
 
 def handle_client_exceptions(func):
-    """ Decorator to handle client exceptions. """
+    """Decorator to handle client exceptions."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -23,13 +24,16 @@ def handle_client_exceptions(func):
             raise HTTPException(status_code=e.http_error_status, detail=e.message)
         except Exception as e:
             detail = "General error occurred: {}, traceback: {}".format(
-                repr(e), ''.join(traceback.format_tb(e.__traceback__)))
+                repr(e), "".join(traceback.format_tb(e.__traceback__))
+            )
             raise HTTPException(status_code=500, detail=detail)
+
     return wrapper
 
 
 def handle_exceptions(func):
-    """ Decorator to handle server exceptions. """
+    """Decorator to handle server exceptions."""
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -46,22 +50,26 @@ def handle_exceptions(func):
             raise HTTPException(status_code=e.http_error_status, detail=e.message)
         except Exception as e:
             detail = "General error occurred: {}, traceback: {}".format(
-                repr(e), ''.join(traceback.format_tb(e.__traceback__)))
+                repr(e), "".join(traceback.format_tb(e.__traceback__))
+            )
             raise HTTPException(status_code=500, detail=detail)
+
     return wrapper
 
 
 class CustomException(Exception):
-    """ Class that all custom exceptions must inherit in order for exception to be caught by the
+    """Class that all custom exceptions must inherit in order for exception to be caught by the
     handle_exceptions decorator.
     """
+
     pass
 
 
 class CustomHTTPException(Exception):
-    """ Class that all custom HTTP exceptions must inherit in order for exception to be caught by
+    """Class that all custom HTTP exceptions must inherit in order for exception to be caught by
     the handle_exceptions decorator.
     """
+
     pass
 
 

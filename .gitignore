@@ -29,3 +29,6 @@ etc/helm/values.yaml
 
 # IDE specific files
 .idea
+
+# databases
+compute.db
