@@ -340,11 +340,11 @@ async def query(query_input: models.QueryInput):
 
 
 @api_version(1)
-@app.post(
+@app.put(
     "/provision",
     responses={200: {"model": models.response.ProvisionResponse}},
     tags=["Submit"],
-    summary="Query for general compute availability snd provision resources.",
+    summary="Query for general compute availability and provision resources.",
 )
 @handle_exceptions
 async def provision(provision_input: models.QueryInput, db: Session = Depends(get_db)):
@@ -353,7 +353,7 @@ async def provision(provision_input: models.QueryInput, db: Session = Depends(ge
 
 
 @api_version(1)
-@app.post(
+@app.put(
     "/provision/{provision_id}/submit",
     responses={200: {"model": models.response.JobSubmissionResponse}},
     tags=["Submit"],
