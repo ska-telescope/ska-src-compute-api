@@ -4,12 +4,17 @@ services:
 
 stages:
 - build
+- test
 - deploy
 
 variables:
   API_IMAGE_NAME: $CI_REGISTRY_IMAGE/api
   GIT_SUBMODULE_STRATEGY: recursive
 
+test-api:
+  stage: test
+  script:
+    - echo tests still need to be implemented
 build-api:
   only:
     - main
