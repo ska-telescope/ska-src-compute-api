@@ -13,7 +13,7 @@ class ComputeClient:
 
     @handle_client_exceptions
     def health(self):
-        """ Get the service health.
+        """Get the service health.
 
         :return: A requests response.
         :rtype: requests.models.Response
@@ -25,7 +25,7 @@ class ComputeClient:
 
     @handle_client_exceptions
     def ping(self):
-        """ Ping the service.
+        """Ping the service.
 
         :return: A requests response.
         :rtype: requests.models.Response

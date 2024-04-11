@@ -12,13 +12,12 @@ class Constants:
     #
     @property
     def iam_endpoint_authorization(self):
-        return self.client_well_known.get('authorization_endpoint')
+        return self.client_well_known.get("authorization_endpoint")
 
     @property
     def iam_endpoint_token(self):
-        return self.client_well_known.get('token_endpoint')
+        return self.client_well_known.get("token_endpoint")
 
     @property
     def iam_endpoint_introspection(self):
-        return self.client_well_known.get('introspection_endpoint')
-
+        return self.client_well_known.get("introspection_endpoint")

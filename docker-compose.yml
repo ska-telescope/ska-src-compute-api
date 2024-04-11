@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      DISABLE_AUTHENTICATION: "yes"
+      DISABLE_AUTHENTICATION: ${DISABLE_AUTHENTICATION}
       API_ROOT_PATH:
       API_SCHEME: http
       IAM_CLIENT_CONF_URL: https://ska-iam.stfc.ac.uk/.well-known/openid-configuration
