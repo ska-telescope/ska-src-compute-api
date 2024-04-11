@@ -10,9 +10,12 @@ minor)     tag="$major.$((minor+1)).0"; ;;
 esac
 
 # Change the application VERSION
-
 echo $tag > ../../VERSION
 
-# Change the helm chart application version
-yq w -i ../helm/Chart.yaml appVersion $tag
+YQ_MAJ_VERSION=$(yq --version |  sed -r 's/^yq .*([1-9])\.[1-9]+\.[1-9]+.*/\1/')
 
+case "$YQ_MAJ_VERSION" in
+3) yq w -i ../helm/Chart.yaml appVersion $tag; ;;
+4) yq -i ".appVersion = \"$tag\"" ../helm/Chart.yaml; ;;
+esac
+ 
