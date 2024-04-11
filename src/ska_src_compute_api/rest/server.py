@@ -4,6 +4,7 @@ import json
 import os
 import time
 from typing import Union
+import jwt
 
 from authlib.integrations.requests_client import OAuth2Session
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -133,6 +134,13 @@ async def verify_permission_for_service_route(
     if rtn.get("is_authorised", False):
         return
     raise PermissionDenied
+
+
+@handle_exceptions
+async def get_user_id(authorization: str = Depends(security)):
+    token_string = authorization.credentials
+    token_obj = jwt.decode(token_string, options={"verify_signature": False})
+    return token_obj.get("sub")
 
 
 # Check service route permissions from user token groups (taking token from query parameters).
@@ -332,10 +340,17 @@ async def health(request: Request):
     responses={200: {"model": models.QueryResponse}},
     tags=["Query"],
     summary="Query for general compute availability.",
+    dependencies=[Depends(increment_request_counter)]
+    if DEBUG
+    else [
+        Depends(increment_request_counter),
+        Depends(verify_permission_for_service_route),
+    ],
 )
 @handle_exceptions
-async def query(query_input: models.QueryInput):
+async def query(query_input: models.QueryInput, authorization: str = Depends(security)):
     """Query for availability"""
+    print(authorization)
     return query_resources(query_input)
 
 
@@ -345,11 +360,21 @@ async def query(query_input: models.QueryInput):
     responses={200: {"model": models.response.ProvisionResponse}},
     tags=["Submit"],
     summary="Query for general compute availability and provision resources.",
+    dependencies=[Depends(increment_request_counter)]
+    if DEBUG
+    else [
+        Depends(increment_request_counter),
+        Depends(verify_permission_for_service_route),
+    ],
 )
 @handle_exceptions
-async def provision(provision_input: models.QueryInput, db: Session = Depends(get_db)):
+async def provision(
+    provision_input: models.QueryInput,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_user_id),
+):
     """Query for availability and provision resources."""
-    return provision_resources(provision_input, db)
+    return provision_resources(provision_input=provision_input, db=db, user_id=user_id)
 
 
 @api_version(1)
@@ -358,13 +383,24 @@ async def provision(provision_input: models.QueryInput, db: Session = Depends(ge
     responses={200: {"model": models.response.JobSubmissionResponse}},
     tags=["Submit"],
     summary="Submit job for the provision.",
+    dependencies=[Depends(increment_request_counter)]
+    if DEBUG
+    else [
+        Depends(increment_request_counter),
+        Depends(verify_permission_for_service_route),
+    ],
 )
 @handle_exceptions
 async def submit(
-    job_input: models.JobInput, provision_id: str, db: Session = Depends(get_db)
+    job_input: models.JobInput,
+    provision_id: str,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_user_id),
 ):
     """Submit job to be executed using the provision."""
-    return submit_job(job_input=job_input, provision_id=provision_id, db=db)
+    return submit_job(
+        job_input=job_input, provision_id=provision_id, db=db, user_id=user_id
+    )
 
 
 @api_version(1)
@@ -373,11 +409,21 @@ async def submit(
     responses={200: {"model": models.response.JobStatusResponse}},
     tags=["Submit"],
     summary="Status information for a submitted job.",
+    dependencies=[Depends(increment_request_counter)]
+    if DEBUG
+    else [
+        Depends(increment_request_counter),
+        Depends(verify_permission_for_service_route),
+    ],
 )
 @handle_exceptions
-async def get_job_status(provision_id: str, db: Session = Depends(get_db)):
+async def get_job_status(
+    provision_id: str,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_user_id),
+):
     """See the satus of a submitted job."""
-    return job_status(provision_id=provision_id, db=db)
+    return job_status(provision_id=provision_id, db=db, user_id=user_id)
 
 
 # Versionise the API.
