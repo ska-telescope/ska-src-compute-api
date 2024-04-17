@@ -20,7 +20,7 @@ def query_resources(query_input: QueryInput) -> QueryResponse:
     my_gpu = ["K40", "RX7900XT"]
     my_max_mem = 100
     response_code, response_text = 0, "Ok"
-    if query_input.data_location != "democity":
+    if query_input.data_location != "SPSRC":
         response_code = 3
         response_text = "Internal error. Could not connect to the database."
         return QueryResponse.parse_obj(
@@ -62,7 +62,7 @@ def provision_resources(provision_input: QueryInput, db: Session, user_id: str):
     if availability.response_code:
         return availability
     provision = crud.add_provision(db, provision_input, user_id)
-    my_site = "demo.city"
+    my_site = "spsrc"
     provision_ref = f"{my_site}-{provision.id}.prov"
     return ProvisionResponse.parse_obj(
         {
@@ -75,7 +75,7 @@ def provision_resources(provision_input: QueryInput, db: Session, user_id: str):
 
 
 def submit_job(job_input: JobInput, provision_id: str, db: Session, user_id: str):
-    my_site = "demo.city"
+    my_site = "spsrc"
     job = crud.add_job(
         job_data=job_input,
         provision_id=provision_id,
