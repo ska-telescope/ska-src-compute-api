@@ -63,7 +63,7 @@ def add_job(
     provcheck = check_provision_validity(provision, db)
     if provision.user_id != user_id:
         return {"response_code": 4, "response_text": "Access denied", "job_id": None}
-    if not any(value in job_data.dataset for value in ["/demo_city/", "skao.int"]):
+    if not any(value in job_data.dataset for value in ["/demo_city/", "skao.int", "iaa.csic.es"]):
         return {
             "response_code": 1,
             "response_text": "Job cannot be executed: Data not in this location",
